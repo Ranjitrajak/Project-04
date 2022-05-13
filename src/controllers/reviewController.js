@@ -30,9 +30,9 @@ const { isValidRequestBody, isValid,isValidObjectId } = require("../utilities/va
         let createData = await reviewModel.create(data);
 
     //==updating review in book document==//    
-        let reviewCount=book.reviews
-        reviewCount ++;
-        const updateReview = await bookModel.findOneAndUpdate({_id:data.bookId,isDeleted:false},{reviews:reviewCount },{new:true})
+       // let reviewCount=book.reviews
+       // reviewCount ++;
+        const updateReview = await bookModel.findOneAndUpdate({_id:data.bookId,isDeleted:false},{$inc:{reviews:1 }},{new:true})
 
     //==destructuring to get only required keys ==// 
         const { title,excerpt ,userId,category,reviews,subcategory,deletedAt,isDeleted, releasedAt,createdAt,updatedAt}=updateReview
@@ -40,7 +40,7 @@ const { isValidRequestBody, isValid,isValidObjectId } = require("../utilities/va
 
     //==finding and sending all reviews for book==// 
         let getReview= await reviewModel.find({bookId:data.bookId,isDeleted: false}).select({_id:1,bookId:1,reviewedBy:1,reviewedAt:1,rating:1,review:1})
-        details["reviewData"]=getReview
+        details["reviewData"]=createData
         return res.status(201).send({status:true, message:"Book list",data:details})
 
     }catch (error) {
@@ -85,3 +85,39 @@ const { isValidRequestBody, isValid,isValidObjectId } = require("../utilities/va
 module.exports = { createReview, deleteReview }
 
 //**********************************************************************//
+
+const updateReviews = async (req, res) => {
+    try {
+        let bookId = req.params.bookId;
+        let reviewId = req.params.reviewId;
+        if (!isValidObjectId(data.bookId)) { return res.status(400).send({ status: false, message: "You should have put correct book Id in params" }) }
+        if (!isValidObjectId(reviewId)) { return res.status(400).send({ status: false, message: "You should have put correct review Id in params" }) }
+        let data = req.body;
+        if(!isValidRequestBody(data)){return res.status(400).send({status: false, message: "Enter some data for update"})}
+        if (!(data.rating >= 1 && data.rating <= 5)) { return res.status(400).send({ status: false, message: "Rating value should be between 1 to 5" }) }
+
+        let book = await bookModel.findOne({ _id: bookId, isDeleted: false })
+        if (!book) { return res.status(400).send({ status: false, message: "No book exist with this id" }) }
+
+        let checkReviewId = await reviewModel.findOne({ _id: reviewId, isDeleted: false })
+        if (!checkReviewId) { return res.status(400).send({ status: false, message: "No review exist with this id" }) }
+
+        let updateReview = await reviewModel.findOneAndUpdate({ _id: reviewId, bookId: bookId },
+            { $set: { review: data.review, rating: data.rating, reviewedBy: data.reviewedBy, reviewedAt: data.reviewAt } }, { new: true })
+
+        let result = {
+            bookId: book._id,
+            title: book.title,
+            excerpt: book.excerpt,
+            userId: book.userId,
+            category: book.category,
+            reviews: book.review,
+            releasedAt: book.releasedAt,
+            reviewsData: updateReview
+        };
+        return res.status(200).send({ status: true, message: "Review updated successfully", data: result })
+    }
+    catch (error) {
+        return res.status(500).send({ status: false, error: error.message })
+    }
+}
