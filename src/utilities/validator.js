@@ -74,5 +74,6 @@ let isValidDate = function(value) {
   }
 //**********************************************************************//
 
-
 module.exports = { isValidRequestBody,isValidDate,isValidISBN, isValid, isValidObjectId, isValidEmail, isValidMobile, isValidName, isValidPassword, isValidEnum }
+
+//**********************************************************************//

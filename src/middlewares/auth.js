@@ -7,6 +7,7 @@ let authenticateUser = function (req, res, next) {
         let token = req.headers["x-api-key"]
         if (!token) token = req.headers["X-Api-Key"]
         if (!token) return res.status(400).send({ status: false, message: "Token is required" })
+        
         try {
             decodeToken = jwt.verify(token, "Dksfoljdc45095");
             req.userId = decodeToken.userId;
@@ -18,6 +19,8 @@ let authenticateUser = function (req, res, next) {
         return res.status(500).send({ status: false,  message: err.message })
     }
 }
+
+//**********************************************************************//
 
 const authorization = async function (req, res, next) {
     try {
@@ -36,4 +39,8 @@ const authorization = async function (req, res, next) {
     }
 }
 
-module.exports = { authenticateUser,authorization }
+//**********************************************************************//
+
+ module.exports = { authenticateUser,authorization }
+
+//**********************************************************************//
