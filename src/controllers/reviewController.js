@@ -1,34 +1,44 @@
 
-//const { request } = require("http");
 const bookModel = require("../models/bookModel");
 const reviewModel = require("../models/reviewModel");
-const { isValidRequestBody, isValid, isValidObjectId } = require("../utilities/validator");
+const { isValidRequestBody, isValid, isValidObjectId, isValidName } = require("../utilities/validator");
 
 
 //---CREATE REVIEW FOR BOOKID
 const createReview = async function (req, res) {
     try {
-        //==validating bookId(params)==//
-        if (!isValidObjectId(req.params.bookId)) { return res.status(400).send({ status: false, message: "Please provide valid Book Id in param." }) }
-
         //==validating request body==//   
         let data = req.body;
-        data["reviewedAt"] = new Date();
         if (!isValidRequestBody(data)) { return res.status(400).send({ status: false, message: "Enter data to create a review" }) }
+        data["reviewedAt"] = new Date();
 
-        //==validating bookId(request body)==//
-        if (!isValid(data.bookId)) { return res.status(400).send({ status: false, message: "BookId is required" }) }
-        if (!isValidObjectId(data.bookId)) { return res.status(400).send({ status: false, message: "Please provide valid Book Id." }) }
+
+        //==validating bookId(params)==//
+        let bookId = req.params.bookId
+        if (!isValidObjectId(bookId)) { return res.status(400).send({ status: false, message: "Please provide valid Book Id in param." }) }
+        data["bookId"] = bookId
+
+        //==validating reviewedBy==//
+        if (data.reviewedBy == "") { return res.status(400).send({ status: false, message: "Please provide valid name." }) }
+        else if (data.reviewedBy) {
+            if (!isValidName(data.reviewedBy)) { return res.status(400).send({ status: false, message: "Please provide valid name." }) }
+        }
 
         //==validating rating==//
         if (!isValid(data.rating)) { return res.status(400).send({ status: false, message: "Rating is required" }) }
         if (!(data.rating >= 1 && data.rating <= 5)) { return res.status(400).send({ status: false, message: "Rating value should be between 1 to 5" }) }
 
+        //==validating review==//
+        if (data.review == "") { return res.status(400).send({ status: false, message: "Please provide valid review." }) }
+        else if (data.review) {
+            if (!isValid(data.review)) { return res.status(400).send({ status: false, message: "Please provide valid review." }) }
+        }
+
+
         //==finding book document & creating review==//
-        if ((data.bookId !== req.params.bookId)) { return res.status(400).send({ status: false, message: "Book Id does not match." }) }
-        let book = await bookModel.findOne({ _id: data.bookId, isDeleted: false })
+        let book = await bookModel.findOne({ _id: bookId, isDeleted: false })
         if (!book) { return res.status(400).send({ status: false, message: "No book exist with this id" }) }
-        let createData = await reviewModel.create(data);
+        let createData = await reviewModel.create(data)
 
     //==updating review in book document==//    
        // let reviewCount=book.reviews
@@ -39,10 +49,11 @@ const createReview = async function (req, res) {
         const { title, excerpt, userId, category, reviews, subcategory, deletedAt, isDeleted, releasedAt, createdAt, updatedAt } = updateReview
         let details = { title, excerpt, userId, category, reviews, subcategory, deletedAt, isDeleted, releasedAt, createdAt, updatedAt }
 
-        //==finding and sending all reviews for book==// 
-        //let getReview = await reviewModel.find({ bookId: data.bookId, isDeleted: false }).select({ _id: 1, bookId: 1, reviewedBy: 1, reviewedAt: 1, rating: 1, review: 1 })
-        details["reviewData"] = createData
-        return res.status(201).send({ status: true, message: "Book list", data: details })
+        const { _id, reviewedBy, reviewedAt, rating, review } = createData
+        let reviewData = { _id, bookId: bookId, reviewedBy, reviewedAt, rating, review }
+        //==sending updated review for book==// 
+        details["reviewData"] = reviewData
+        return res.status(201).send({ status: true, message: "Success", data: details })
 
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message })
@@ -54,25 +65,45 @@ const createReview = async function (req, res) {
 //---UPDATE REVIEW
 const updatereview = async function (req, res) {
     try {
-        //==validating review Id(params)==//
-        let reviewId = req.params.reviewId
-        if (!isValidObjectId(reviewId)) return res.status(400).send({ status: false, message: " Invalid reviewId found" })
 
         //==validating BookId(params)==//
         bookId = req.params.bookId
         if (!isValidObjectId(bookId)) return res.status(400).send({ status: false, message: "book Id is not Valid" })
 
+        //==validating review Id(params)==//
+        let reviewId = req.params.reviewId
+        if (!isValidObjectId(reviewId)) return res.status(400).send({ status: false, message: " Invalid reviewId found" })
+
+        //==validating request body==//
+        let reqBody = req.body;
+        if (!isValidRequestBody(reqBody)) {
+            return res.status(400).send({ status: false, message: "please enter data in body" })
+        }
+
+        //==validating rating==//
+        if (!isValid(reqBody.rating)) { return res.status(400).send({ status: false, message: "Rating is required" }) }
+        if (!(reqBody.rating >= 1 && reqBody.rating <= 5)) { return res.status(400).send({ status: false, message: "Rating value should be between 1 to 5" }) }
+
+        //==validating reviewedBy==//
+        if (reqBody.reviewedBy == "") { return res.status(400).send({ status: false, message: "Please provide valid name." }) }
+        else if (reqBody.reviewedBy) {
+            if (!isValidName(data.reviewedBy)) { return res.status(400).send({ status: false, message: "Please provide valid name." }) }
+        }
+
+        //==validating review==//
+        if (reqBody.review == "") { return res.status(400).send({ status: false, message: "Please provide valid review." }) }
+        else if (reqBody.review) {
+            if (!isValid(reqBody.review)) { return res.status(400).send({ status: false, message: "Please provide valid review." }) }
+        }
+
         //==Finding Book by Id==//
         const checkBook = await bookModel.findOne({ _id: bookId, isDeleted: false })
+
         if (!checkBook) {
             return res.status(404).send({ status: false, message: "Book not found" })
         }
 
         //==Destructuring to get request Body Entries==//
-        let reqBody = req.body;
-        if (!isValidRequestBody(reqBody)) {
-            return res.status(400).send({ status: false, message: "please enter data in body" })
-        }
         let { review, rating, reviewedBy } = reqBody
         let updateReview = { review, rating, reviewedBy }
 
@@ -101,13 +132,14 @@ const updatereview = async function (req, res) {
 //---DELETE REVIEW FOR BOOKID
 const deleteReview = async function (req, res) {
     try {
-        //==validating review Id(params)==//
-        let reviewId = req.params.reviewId;
-        if (!isValidObjectId(reviewId)) return res.status(400).send({ status: false, message: "review Id is not a valid Id" })
 
         //==validating book Id(params)==//
         let bookId = req.params.bookId
-        if (!isValidObjectId(bookId)) return res.status(400).send({ status: false, message: "Book id is not a valid" })
+        if (!isValidObjectId(bookId)) return res.status(400).send({ status: false, message: `Book id ${bookId} is not a valid` })
+
+        //==validating review Id(params)==//
+        let reviewId = req.params.reviewId;
+        if (!isValidObjectId(reviewId)) return res.status(400).send({ status: false, message: `review Id ${reviewId} is not a valid Id` })
 
         //==Review delete for deleted book==//
         const deleteBook = await bookModel.findOne({ _id: bookId, isDeleted: false })
@@ -129,7 +161,6 @@ const deleteReview = async function (req, res) {
 }
 
 //**********************************************************************//
-
 
 module.exports = { createReview, deleteReview, updatereview }
 

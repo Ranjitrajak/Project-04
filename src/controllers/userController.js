@@ -82,7 +82,7 @@ const loginUser = async function (req, res) {
             {
                 userId: _id.toString(),
                 iat: Math.floor(Date.now() / 1000),
-                exp: Math.floor(Date.now() / 1000 + 24 * 60 * 60)
+                exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60
             },
             "Dksfoljdc45095"
         );
