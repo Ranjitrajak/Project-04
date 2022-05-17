@@ -47,16 +47,7 @@ const createBook = async function (req, res) {
         const bookData = { title, excerpt, userId, ISBN, category, subcategory, isDeleted, releasedAt };
         const saveBook = await bookModel.create(bookData)
 
-        // let result={
-        //    _id: saveBook._id,
-        //    title:saveBook.title,
-        //    excerpt:saveBook.excerpt,
-        //    userId:saveBook.userId,
-        //    ISBN:saveBook.ISBN,
-        //    category:saveBook.category,
-        //    subcategory:saveBook.subcategory,
-        //    releasedAt:saveBook.releasedAt
-        // }
+      
 
         return res.status(201).send({ status: true, message: "Success", data: saveBook })
 

@@ -80,9 +80,14 @@ const updatereview = async function (req, res) {
             return res.status(400).send({ status: false, message: "please enter data in body" })
         }
 
+        
         //==validating rating==//
-        if (!isValid(reqBody.rating)) { return res.status(400).send({ status: false, message: "Rating is required" }) }
-        if (!(reqBody.rating >= 1 && reqBody.rating <= 5)) { return res.status(400).send({ status: false, message: "Rating value should be between 1 to 5" }) }
+        
+       if(reqBody.rating==""){return res.status(400).send({ status: false, message: "Please provide valid rating."})}
+       else if(reqBody.rating){
+           if (!isValid(reqBody.rating)) { return res.status(400).send({ status: false, message: "Rating is required" }) }
+           if (!(reqBody.rating >= 1 && reqBody.rating <= 5)) { return res.status(400).send({ status: false, message: "Rating value should be between 1 to 5" }) }
+       }
 
         //==validating reviewedBy==//
         if (reqBody.reviewedBy == "") { return res.status(400).send({ status: false, message: "Please provide valid name." }) }
