@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 // instantiate a mongoose schema
 const URLSchema = new mongoose.Schema({
-    urlCode: {type:String,trim:true},
+    urlCode: {type:String,unique:true,lowercase:true,trim:true},
     longUrl: {type:String,required:true,trim:true},
     shortUrl: {type:String,trim:true}
     

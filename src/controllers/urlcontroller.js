@@ -4,26 +4,36 @@ const shortid = require('shortid')
 const baseUrl = 'http:localhost:3000'
 
 const createShorturl= async function(req,res){
-    const {longUrl}=req.body
-    if (!validUrl.isUri(longUrl)) { return res.status(400).send({msg:"invalid url"})}
-    const urlCode = shortid.generate()
+
+    let {longUrl}=req.body
+    if (!validUrl.isUri(longUrl)) {
+        return res.status(400).json('Invalid base URL')
+    }
+    let check=await urlModel.findOne({longUrl:longUrl})
+    if(check){
+        return res.status(409).send({status:false,message:"already exist"})
+    }
+    const urlCode = shortid.generate(longUrl)
+    let url=await urlModel.findOne({urlCode:urlCode})
+    if(url){
+        return res.status(409).send({status:false,message:"already exist"})
+    }
     const shortUrl = baseUrl + '/' + urlCode
-    const newurl={longUrl,urlCode,shortUrl}
-    const short= await urlModel.create(newurl)
-    return res.status(201).send({data:short})
+    const newUrl={longUrl,shortUrl,urlCode}
+    const short=await urlModel.create(newUrl)
+    return res.status(201).send({status:true,data:short})
 
 }
 const getlongurl=async function(req,res){
-    urlCode= req.params.urlCode
-    const url = await urlModel.findOne({urlCode})
-   
-    if (url) {
-        // when valid we perform a redirect
-        return res.status(200).send({satue:true,data:url.longUrl})
-    } else {
-        // else return a not found 404 status
-        return res.status(404).send('No URL Found')
+    let urlCode=req.params.urlCode
+    let url=await urlModel.findOne({urlCode:urlCode})
+   // console.log(url)
+    if(url){
+        return res.status(302).redirect(url.longUrl)
     }
+    else{
+    return res.status(404).send({status:false,message:"url not found"})
 }
-module.exports.createShorturl=createShorturl
-module.exports.getlongurl=getlongurl
+}
+
+module.exports={createShorturl,getlongurl}

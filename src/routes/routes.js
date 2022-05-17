@@ -1,9 +1,11 @@
 const express = require('express');
 
 const router = express.Router();
-const urlController=require("../controllers/urlcontroller")
-router.post("/url/shorten",urlController.createShorturl)
-router.get("/:urlCode",urlController.getlongurl)
+const {createShorturl,getlongurl}=require("../controllers/urlcontroller")
+
+router.post("/url/shorten",createShorturl)
+
+router.get("/:urlCode",getlongurl)
 
 
 
