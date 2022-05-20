@@ -39,6 +39,7 @@ const createShorturl = async function (req, res) {
 
 
     if (!validUrl.isUri(longUrl)) {
+      
       return res.status(400).json('Invalid base URL')
     }
 
@@ -70,9 +71,9 @@ const createShorturl = async function (req, res) {
 
       return res.status(201).send({ status: true, data: short })
     }
-  } catch (error) {
+  }catch (error) {
     return res.status(500).send({ status: false, msg: error.message })
-  }
+  } 
 
 }
 //Redirect short url to long url-------
@@ -84,7 +85,10 @@ const getlongurl = async function (req, res) {
 
     let urlCode = req.params.urlCode
 
-    if (!urlCode) return res.status(400).send({ status: false, message: "Invalid request parameter. Please provide urlCode" })
+    //urlcode validation........
+
+   
+    if (!shortid.isValid(urlCode)) return res.status(400).send({ status: false, message: "Please provide Correct urlCode." });
 
     // Find urlcode  in cache----
 
@@ -99,9 +103,9 @@ const getlongurl = async function (req, res) {
 
     let url = await urlModel.findOne({ urlCode: urlCode })
 
-    if (!url)
+    if (!url){
 
-      return res.status(404).send({ status: false, message: "URL not found !" });
+      return res.status(404).send({ status: false, message: "URL not found !" });}
 
     //save urlcode in cache-----
 
