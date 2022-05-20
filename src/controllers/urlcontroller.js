@@ -56,7 +56,7 @@ const createShorturl = async function (req, res) {
 
 
     else {
-      const baseUrl = 'http:localhost:3000'
+      const baseUrl = ' http://localhost:3000'
       const urlCode = shortid.generate().toLowerCase()
       const shortUrl = baseUrl + '/' + urlCode
       const newUrl = { longUrl, shortUrl, urlCode }
