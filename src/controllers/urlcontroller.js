@@ -28,46 +28,50 @@ const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 //start create short url------
 
 const createShorturl = async function (req, res) {
+  try {
 
-  let { longUrl } = req.body
+    let { longUrl } = req.body
 
-  if (Object.keys(req.body).length == 0) { return res.status(400).send({ message: "please input data" }) }
-
-
-  //validation of long url------
+    if (Object.keys(req.body).length == 0) { return res.status(400).send({ message: "please input data" }) }
 
 
-  if (!validUrl.isUri(longUrl)) {
-    return res.status(400).json('Invalid base URL')
-  }
-
-  //Finding long url in cache----
-
-  let alreadyCreate = await GET_ASYNC(`${longUrl}`)
-  
-  let jsonData = JSON.parse(alreadyCreate)
-
-  if (alreadyCreate) {
-    return res.status(201).send({ status: true, message: "succesfull", data: jsonData })
-  }
-
-  //create short url-------    
+    //validation of long url------
 
 
-  else {
-    const baseUrl = 'http:localhost:3000'
-    const urlCode = shortid.generate().toLowerCase()
-    const shortUrl = baseUrl + '/' + urlCode
-    const newUrl = { longUrl, shortUrl, urlCode }
-    const short = await urlModel.create(newUrl)
+    if (!validUrl.isUri(longUrl)) {
+      return res.status(400).json('Invalid base URL')
+    }
+
+    //Finding long url in cache----
+
+    let alreadyCreate = await GET_ASYNC(`${longUrl}`)
+
+    let jsonData = JSON.parse(alreadyCreate)
+
+    if (alreadyCreate) {
+      return res.status(201).send({ status: true, message: "succesfull", data: jsonData })
+    }
+
+    //create short url-------    
 
 
-    //save short url in casche----
+    else {
+      const baseUrl = 'http:localhost:3000'
+      const urlCode = shortid.generate().toLowerCase()
+      const shortUrl = baseUrl + '/' + urlCode
+      const newUrl = { longUrl, shortUrl, urlCode }
+      const short = await urlModel.create(newUrl)
 
-    await SET_ASYNC(`${req.body.longUrl}`, JSON.stringify(short))
+
+      //save short url in casche----
+
+      await SET_ASYNC(`${req.body.longUrl}`, JSON.stringify(short))
 
 
-    return res.status(201).send({ status: true, data: short })
+      return res.status(201).send({ status: true, data: short })
+    }
+  } catch (error) {
+    return res.status(500).send({ status: false, msg: error.message })
   }
 
 }
@@ -76,30 +80,39 @@ const createShorturl = async function (req, res) {
 
 
 const getlongurl = async function (req, res) {
+  try {
 
-  let urlCode = req.params.urlCode
+    let urlCode = req.params.urlCode
 
-  if (!urlCode) return res.status(400).send({ status: false, message: "Invalid request parameter. Please provide urlCode" })
+    if (!urlCode) return res.status(400).send({ status: false, message: "Invalid request parameter. Please provide urlCode" })
 
-// Find urlcode  in cache----
+    // Find urlcode  in cache----
 
-  let Url = await GET_ASYNC(`${urlCode}`)
+    let Url = await GET_ASYNC(`${urlCode}`)
 
-  console.log(Url)
-  if (Url) {
-    return res.status(302).redirect(Url)
-  }
+    // console.log(Url)
+    if (Url) {
+      return res.status(302).redirect(Url)
+    }
 
-//Find urlcode in Database----
-  else {
+    //Find urlcode in Database----
+
     let url = await urlModel.findOne({ urlCode: urlCode })
 
-  //save urlcode in cache-----
+    if (!url)
+
+      return res.status(404).send({ status: false, message: "URL not found !" });
+
+    //save urlcode in cache-----
 
     await SET_ASYNC(`${req.params.urlCode}`, JSON.stringify(url.longUrl))
+
     //redirect to long url-----
 
     return res.status(302).redirect(url.longUrl)
+
+  } catch (error) {
+    return res.status(500).send({ status: false, msg: error.message })
   }
 
 
