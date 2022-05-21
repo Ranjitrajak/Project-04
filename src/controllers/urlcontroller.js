@@ -38,7 +38,7 @@ const createShorturl = async function (req, res) {
     //validation of long url------
 
 
-    if (!validUrl.isUri(longUrl)) {
+    if (!validUrl.isWebUri(longUrl)) {
       
       return res.status(400).json('Invalid base URL')
     }
